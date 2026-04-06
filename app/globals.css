@@ -126,4 +126,90 @@
   html {
     @apply font-sans;
     }
+  main {
+    @apply mx-auto container flex flex-col px-5 sm:px-10 py-10;
+  }
+
+  h1 {
+    @apply text-5xl sm:text-6xl font-semibold tracking-tighter;
+  }
+
+  h2 {
+    @apply text-3xl sm:text-4xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-medium tracking-tight;
+  }
+
+  h4 {
+    @apply text-xl font-medium;
+  }
+
+  p {
+    @apply text-muted-foreground;
+  }
+
+  ul {
+    @apply list-disc list-inside space-y-1;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* ====================== COMPONENTS ====================== */
+
+@layer components {
+  .board-card {
+    @apply relative flex flex-col gap-3 rounded-2xl border bg-card p-5 transition-all hover:border-primary/50 hover:shadow-xl hover:-translate-y-0.5;
+  }
+
+  .board-preview {
+    @apply h-40 w-full rounded-xl border bg-muted/50 transition-transform duration-300;
+  }
+
+  /* Canvas wrapper */
+  .pulse-canvas-wrapper {
+    @apply fixed inset-0 z-0;
+  }
+
+  /* Top floating toolbar */
+  .toolbar {
+    @apply fixed top-4 left-1/2 z-50 -translate-x-1/2 flex items-center gap-2 rounded-2xl border bg-card/95 backdrop-blur-xl px-3 py-2 shadow-2xl;
+  }
+
+  /* AI Floating Button */
+  .ai-fab {
+    @apply fixed bottom-8 right-8 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-xl hover:scale-110 active:scale-95 transition-all duration-200;
+  }
+
+  /* Live avatars */
+  .live-avatars {
+    @apply absolute top-4 right-4 z-50 flex -space-x-3;
+  }
+
+  /* Cmd+K trigger */
+  .cmdk-trigger {
+    @apply flex items-center gap-2 rounded-xl border bg-muted px-4 py-2 text-sm text-muted-foreground hover:bg-accent transition-colors;
+  }
+
+  /* Future sidebar */
+  .pulse-sidebar {
+    @apply w-72 border-r bg-card flex flex-col h-screen overflow-hidden;
+  }
+}
+
+/* Dark mode polish */
+.dark .glass {
+  @apply bg-zinc-900/80 border-white/10;
+}
+
+.dark .card-shadow {
+  box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.4);
+}
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

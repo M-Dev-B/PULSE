@@ -1,5 +1,7 @@
 import { Geist, Geist_Mono, Source_Sans_3, Montserrat } from "next/font/google"
 
+import type { Metadata } from 'next'
+import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils";
@@ -13,6 +15,11 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
+export const metadata: Metadata = {
+  title: "Pulse — Collaborative Whiteboard",
+  description: "Real-time whiteboard with AI",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,7 +32,10 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", sourceSans3.variable, montserratHeading.variable)}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ClerkProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </ClerkProvider>
+        
       </body>
     </html>
   )
