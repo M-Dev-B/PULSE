@@ -1,15 +1,29 @@
-// liveblocks.config.ts
-import { createClient } from "@liveblocks/client";
-import { createRoomContext } from "@liveblocks/react";
+import { LiveMap } from "@liveblocks/client";
 
-const client = createClient({
-    publicApiKey: process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY!,
-});
+declare global {
+    interface Liveblocks {
+        // Each user's Presence (e.g., cursor coordinates)
+        Presence: {
+            // We can define cursors here later
+        };
 
-type Presence = {};
+        // The Storage tree for the room, for useRoom, useStorage, etc.
+        Storage: {
+            elements: LiveMap<string, any>;
+        };
 
-type Storage = {
-    elements: any[]; // Excalidraw elements
-};
+        // Custom user info set when authenticating
+        UserMeta: {
+            id: string;
+            info: {
+                name?: string;
+                avatar?: string;
+            };
+        };
 
-export const { RoomProvider, useStorage, useMutation } = createRoomContext<Presence, Storage>(client);
+        // Custom events
+        RoomEvent: {};
+    }
+}
+
+export { };

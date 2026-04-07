@@ -3,6 +3,7 @@
 import { RoomProvider, ClientSideSuspense } from "@liveblocks/react";
 import PulseCanvas from "@/components/PulseCanvas";
 import { use } from "react";
+import { LiveMap } from "@liveblocks/client"; // ✅ Import LiveMap
 
 type Props = {
     params: Promise<{
@@ -16,9 +17,9 @@ export default function BoardPage({ params }: Props) {
     return (
         <RoomProvider
             id={roomId}
-            initialStorage={{ elements: [] }}
+            initialStorage={{ elements: new LiveMap() }} // ✅ Initialize as LiveMap
         >
-            <ClientSideSuspense fallback={<div>Connecting to room...</div>}>
+            <ClientSideSuspense fallback={<div className="flex h-screen items-center justify-center">Connecting to room...</div>}>
                 <PulseCanvas />
             </ClientSideSuspense>
         </RoomProvider>
