@@ -7,6 +7,7 @@ import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import Navbar from '@/components/Navbar'
 
 // Define strict types for your clean architecture
 type Board = {
@@ -91,6 +92,7 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen bg-background">
             <main className="mx-auto container px-5 sm:px-10 py-10">
+                <Navbar />
                 <div className="flex items-end justify-between mb-10">
                     <div>
                         <h1 className="text-5xl font-semibold tracking-tighter">
