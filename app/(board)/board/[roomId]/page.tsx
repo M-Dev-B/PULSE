@@ -2,13 +2,12 @@
 
 import { RoomProvider, ClientSideSuspense } from "@liveblocks/react";
 import PulseCanvas from "@/components/PulseCanvas";
+import LiveSidebar from "@/components/LiveSidebar"; 
 import { use } from "react";
-import { LiveMap } from "@liveblocks/client"; // ✅ Added LiveMap import
+import { LiveMap } from "@liveblocks/client";
 
 type Props = {
-    params: Promise<{
-        roomId: string;
-    }>;
+    params: Promise<{ roomId: string }>;
 };
 
 export default function BoardPage({ params }: Props) {
@@ -17,11 +16,19 @@ export default function BoardPage({ params }: Props) {
     return (
         <RoomProvider
             id={roomId}
-            initialPresence={{ cursor: null }} // ✅ Fixes the TypeScript error
-            initialStorage={{ elements: new LiveMap() }} // ✅ Ensures storage uses LiveMap, not an array
+            initialPresence={{ cursor: null }}
+            initialStorage={{ elements: new LiveMap() }}
         >
-            <ClientSideSuspense fallback={<div className="flex h-screen w-screen items-center justify-center">Connecting to room...</div>}>
-                <PulseCanvas />
+            <ClientSideSuspense fallback={<div className="flex h-screen w-screen items-center justify-center">Connecting to Pulse...</div>}>
+                <div className="flex h-screen w-screen overflow-hidden">
+                    {/* The Canvas takes up the remaining space */}
+                    <main className="flex-1 relative">
+                        <PulseCanvas />
+                    </main>
+                    
+                    {/* The Sidebar (Fixed width) */}
+                    <LiveSidebar />
+                </div>
             </ClientSideSuspense>
         </RoomProvider>
     );

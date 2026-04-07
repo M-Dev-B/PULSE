@@ -13,7 +13,10 @@ export default function Providers({
 }) {
     return (
         <ClerkProvider>
-            <LiveblocksProvider publicApiKey={process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY!}>
+            <LiveblocksProvider
+                authEndpoint="/api/liveblocks-auth"
+                badgeLocation="bottom-left"
+            >
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="dark"

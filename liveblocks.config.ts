@@ -12,12 +12,13 @@ declare global {
             elements: LiveMap<string, any>;
         };
 
-        // Custom user info set when authenticating
+        // This is the "Identity" data that comes from your Auth endpoint
         UserMeta: {
-            id: string;
+            id: string; // The Clerk User ID
             info: {
-                name?: string;
-                avatar?: string;
+                name: string;
+                avatar: string;
+                color: string; // Add a random color for their cursor!
             };
         };
 

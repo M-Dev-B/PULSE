@@ -14,10 +14,10 @@ const ExcalidrawWrapper = dynamic(
 export default function PulseCanvas() {
     const { theme } = useTheme();
     const excalidrawTheme = theme === "dark" ? "dark" : "light";
-    
+
     const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
     const [isStorageReady, setIsStorageReady] = useState(false);
-    
+
     const room = useRoom();
     const updateMyPresence = useUpdateMyPresence();
     const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -89,13 +89,17 @@ export default function PulseCanvas() {
         const syncCollaborators = () => {
             const others = room.getOthers();
             const collaborators = new Map();
-            
+
             for (const other of others) {
+                // 'other.info' now contains the data from Clerk!
                 if (other.presence?.cursor) {
                     collaborators.set(other.connectionId.toString(), {
                         pointer: other.presence.cursor,
-                        username: `Guest ${other.connectionId}`, 
-                        userState: "active"                      
+                        button: "up",
+                        selectedElementIds: {},
+                        username: other.info?.name || "Anonymous", // ✅ Real Name
+                        avatarUrl: other.info?.avatar,             // ✅ Real Avatar
+                        color: other.info?.color || "#9b59b6",     // ✅ Custom Color
                     });
                 }
             }
@@ -103,12 +107,10 @@ export default function PulseCanvas() {
             excalidrawAPI.updateScene({ collaborators });
         };
 
-        syncCollaborators(); 
-        const unsubscribe = room.subscribe("others", syncCollaborators); 
+        syncCollaborators();
+        const unsubscribe = room.subscribe("others", syncCollaborators);
 
-        return () => {
-            unsubscribe();
-        };
+        return () => unsubscribe();
     }, [room, excalidrawAPI, isStorageReady]);
 
     // 4. Sync Local Drawing (Delta Sync with Z-Index Tracking)
@@ -125,7 +127,7 @@ export default function PulseCanvas() {
                     // Loop with `index` to track Excalidraw's strict ordering requirements
                     elements.forEach((el, index) => {
                         const existing = liveElements.get(el.id);
-                        
+
                         // Push to database if: 
                         // 1. It's new
                         // 2. It was modified (version increased)
@@ -138,7 +140,7 @@ export default function PulseCanvas() {
             } catch (error) {
                 console.error("Failed to sync", error);
             }
-        }, 50); 
+        }, 50);
     };
 
     // 5. Sync Local Cursor
@@ -164,7 +166,7 @@ export default function PulseCanvas() {
                 excalidrawAPI={(api) => setExcalidrawAPI(api)}
                 theme={excalidrawTheme}
                 onChange={handleChange}
-                onPointerUpdate={handlePointerUpdate} 
+                onPointerUpdate={handlePointerUpdate}
             />
         </div>
     );
