@@ -4,7 +4,7 @@ declare global {
     interface Liveblocks {
         // Each user's Presence (e.g., cursor coordinates)
         Presence: {
-            // We can define cursors here later
+            cursor: { x: number; y: number } | null;
         };
 
         // The Storage tree for the room, for useRoom, useStorage, etc.
@@ -22,7 +22,7 @@ declare global {
         };
 
         // Custom events
-        RoomEvent: {};
+        // RoomEvent: {};
     }
 }
 

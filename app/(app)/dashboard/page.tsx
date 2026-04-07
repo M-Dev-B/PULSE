@@ -6,38 +6,48 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// Define strict types for your clean architecture
+type Board = {
+    id: string;
+    title: string;
+    updated: string;
+    collaborators: number;
+};
 
 export default function Dashboard() {
     const { isLoaded, isSignedIn, user } = useUser();
     const router = useRouter();
 
-    const [boards, setBoards] = useState([
-        {
-            id: "demo-1",
-            title: "Landing Page Wireframe",
-            updated: "2 hours ago",
-            collaborators: 3,
-        },
-        {
-            id: "demo-2",
-            title: "Mobile App User Flow",
-            updated: "Yesterday",
-            collaborators: 2,
-        },
-        {
-            id: "demo-3",
-            title: "Chandigarh Startup Pitch Deck",
-            updated: "3 days ago",
-            collaborators: 5,
-        },
-    ]);
+    const [boards, setBoards] = useState<Board[]>([]);
+    const [isLoadingBoards, setIsLoadingBoards] = useState(true);
+
+    // 1. Load the user's saved boards on mount
+    useEffect(() => {
+        // Guard clause: don't run if the user isn't loaded yet
+        if (!user) return;
+
+        // Wrap the local storage read in a zero-delay timeout.
+        // This acts as an asynchronous callback, satisfying React's rule 
+        // against synchronous state updates in the effect body.
+        const timer = setTimeout(() => {
+            const savedBoards = localStorage.getItem(`pulse_boards_${user.id}`);
+            if (savedBoards) {
+                setBoards(JSON.parse(savedBoards));
+            }
+            setIsLoadingBoards(false);
+        }, 0);
+
+        // Clean up the timer to prevent memory leaks if the component unmounts quickly
+        return () => clearTimeout(timer);
+    }, [user]);
 
     // Protect the page
     if (!isLoaded) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                Loading...
+            <div className="flex h-screen w-screen items-center justify-center">
+                <div className="animate-pulse">Loading dashboard...</div>
             </div>
         );
     }
@@ -46,20 +56,31 @@ export default function Dashboard() {
         return <RedirectToSignIn />;
     }
 
+    // 2. Generate a unique room and save it
     const createNewBoard = () => {
-        const newBoard = {
-            id: `board-${Date.now()}`,
+        // Generate a mathematically unique ID so rooms never overlap
+        const uniqueRoomId = `room_${crypto.randomUUID()}`;
+
+        const newBoard: Board = {
+            id: uniqueRoomId,
             title: "Untitled Board",
-            updated: "Just now",
-            collaborators: 1,
+            updated: new Date().toLocaleDateString(),
+            collaborators: 1, // Just you initially
         };
 
-        setBoards([newBoard, ...boards]);
+        const updatedBoards = [newBoard, ...boards];
+
+        // Update React State
+        setBoards(updatedBoards);
+
+        // Update Local Storage (tied to Clerk user ID)
+        localStorage.setItem(`pulse_boards_${user?.id}`, JSON.stringify(updatedBoards));
+
         toast.success("New board created!");
 
-        // Navigate using router (correct way)
+        // Navigate to the newly minted room
         setTimeout(() => {
-            router.push(`/board/${newBoard.id}`);
+            router.push(`/board/${uniqueRoomId}`);
         }, 600);
     };
 
@@ -91,33 +112,36 @@ export default function Dashboard() {
                 </div>
 
                 {/* Boards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {boards.map((board) => (
-                        <div
-                            key={board.id}
-                            className="board-card cursor-pointer group"
-                            onClick={() => openBoard(board.id)}
-                        >
-                            <div className="board-preview group-hover:scale-105" />
+                {isLoadingBoards ? (
+                    <div className="text-muted-foreground">Loading your workspace...</div>
+                ) : boards.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {boards.map((board) => (
+                            <div
+                                key={board.id}
+                                className="board-card cursor-pointer group"
+                                onClick={() => openBoard(board.id)}
+                            >
+                                <div className="board-preview group-hover:scale-105" />
 
-                            <CardHeader className="px-0 pt-5 pb-3">
-                                <CardTitle className="text-lg font-medium line-clamp-1">
-                                    {board.title}
-                                </CardTitle>
-                            </CardHeader>
+                                <CardHeader className="px-0 pt-5 pb-3">
+                                    <CardTitle className="text-lg font-medium line-clamp-1">
+                                        {board.title}
+                                    </CardTitle>
+                                </CardHeader>
 
-                            <CardContent className="px-0 flex items-center justify-between text-sm text-muted-foreground">
-                                <p>Updated {board.updated}</p>
-                                <div className="flex items-center gap-1">
-                                    <Users className="w-4 h-4" />
-                                    <span>{board.collaborators}</span>
-                                </div>
-                            </CardContent>
-                        </div>
-                    ))}
-                </div>
-
-                {boards.length === 0 && (
+                                <CardContent className="px-0 flex items-center justify-between text-sm text-muted-foreground">
+                                    <p>Updated {board.updated}</p>
+                                    <div className="flex items-center gap-1">
+                                        <Users className="w-4 h-4" />
+                                        <span>{board.collaborators}</span>
+                                    </div>
+                                </CardContent>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    /* Empty State */
                     <div className="flex flex-col items-center justify-center py-24 text-center">
                         <div className="text-7xl mb-6">🎨</div>
                         <h3 className="text-3xl font-semibold">No boards yet</h3>
