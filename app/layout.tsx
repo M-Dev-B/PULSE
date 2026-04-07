@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import { Montserrat, Source_Sans_3, Geist_Mono } from 'next/font/google';
 import "./globals.css";
-import { ClerkProvider } from '@clerk/nextjs';
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
+import Providers from '@/components/Providers';
+
 
 const montserratHeading = Montserrat({
   subsets: ['latin'],
@@ -47,18 +46,8 @@ export default function RootLayout({
         fontMono.variable           // --font-mono (useful later)
       )}
     >
-      <body className="font-sans">   {/* Default to body font */}
-        <ClerkProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"        // Pulse looks best in dark mode
-            enableSystem={true}
-            disableTransitionOnChange
-          >
-            <Toaster position="top-center" richColors closeButton />
-            {children}
-          </ThemeProvider>
-        </ClerkProvider>
+      <body className="font-sans">
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

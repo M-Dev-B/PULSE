@@ -69,32 +69,6 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Top Navigation */}
-            <header className="border-b bg-card/95 backdrop-blur-xl sticky top-0 z-50">
-                <nav className="mx-auto container flex items-center justify-between px-5 sm:px-10 py-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-primary rounded-2xl flex-center text-primary-foreground font-bold text-2xl">
-                            P
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-semibold tracking-tight">Pulse</h1>
-                            <p className="text-xs text-muted-foreground -mt-1">
-                                collaborative whiteboard
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 text-sm">
-                            <span className="text-muted-foreground">Hi,</span>
-                            <span className="font-medium">
-                                {user?.firstName || user?.username}
-                            </span>
-                        </div>
-                    </div>
-                </nav>
-            </header>
-
             <main className="mx-auto container px-5 sm:px-10 py-10">
                 <div className="flex items-end justify-between mb-10">
                     <div>
