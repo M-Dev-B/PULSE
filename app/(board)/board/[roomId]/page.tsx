@@ -3,7 +3,7 @@
 import { RoomProvider, ClientSideSuspense } from "@liveblocks/react";
 import PulseCanvas from "@/components/PulseCanvas";
 import LiveSidebar from "@/components/LiveSidebar";
-import { use, useMemo } from "react";
+import { use, useMemo, useState } from "react"; // ✨ Added useState
 import { LiveMap } from "@liveblocks/client";
 
 type Props = {
@@ -12,6 +12,9 @@ type Props = {
 
 export default function BoardPage({ params }: Props) {
     const { roomId } = use(params);
+
+    // ✨ NEW: State to hold the AI-generated elements before injection
+    const [newAiElements, setNewAiElements] = useState<any[] | null>(null);
 
     // Memoize initial storage to prevent unnecessary re-renders
     const initialStorage = useMemo(() => ({
@@ -34,9 +37,14 @@ export default function BoardPage({ params }: Props) {
             >
                 <div className="flex h-screen w-screen overflow-hidden bg-background">
                     <main className="flex-1 relative h-full">
-                        <PulseCanvas />
+                        {/* ✨ NEW: Pass the AI elements and the reset function to the Canvas */}
+                        <PulseCanvas 
+                            newAiElements={newAiElements} 
+                            onElementsInjected={() => setNewAiElements(null)} 
+                        />
                     </main>
-                    <LiveSidebar />
+                    {/* ✨ NEW: Pass the state setter to the Sidebar so the Magic Wand can use it */}
+                    <LiveSidebar onGenerate={(elements) => setNewAiElements(elements)} />
                 </div>
             </ClientSideSuspense>
         </RoomProvider>

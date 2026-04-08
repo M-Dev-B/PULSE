@@ -19,7 +19,13 @@ const ExcalidrawWrapper = dynamic(
     }
 );
 
-export default function PulseCanvas() {
+// ✨ NEW: Interface to accept AI data from the parent page
+interface PulseCanvasProps {
+    newAiElements?: any[] | null;
+    onElementsInjected?: () => void;
+}
+
+export default function PulseCanvas({ newAiElements, onElementsInjected }: PulseCanvasProps) {
     const { theme } = useTheme();
     const excalidrawTheme = theme === "dark" ? "dark" : "light";
     
@@ -77,6 +83,24 @@ export default function PulseCanvas() {
             if (unsubscribeOthers) unsubscribeOthers();
         };
     }, [excalidrawAPI, room]);
+
+    // ✨ NEW: 1.5 Inject AI Elements into the Canvas
+    useEffect(() => {
+        if (newAiElements && newAiElements.length > 0 && excalidrawAPI) {
+            // Get what's currently on the board
+            const currentElements = excalidrawAPI.getSceneElements();
+            
+            // Append the new AI shapes to the existing canvas
+            excalidrawAPI.updateScene({
+                elements: [...currentElements, ...newAiElements]
+            });
+
+            // Tell the parent page we are done so it clears the queue
+            if (onElementsInjected) {
+                onElementsInjected();
+            }
+        }
+    }, [newAiElements, excalidrawAPI, onElementsInjected]);
 
     // 2. Sync Local Drawing
     const handleChange = (elements: readonly any[]) => {
