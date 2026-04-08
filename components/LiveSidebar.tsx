@@ -5,7 +5,7 @@ import { useOthers, useSelf, useBroadcastEvent, useEventListener, useRoom } from
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, MessageSquare, Users, ChevronRight, Sparkles, Loader2, Bot } from "lucide-react";
+import { Send, MessageSquare, Users, ChevronRight, Sparkles, Loader2, Bot, Trash2 } from "lucide-react";
 
 type ChatMessage = {
     type: "CHAT_MESSAGE";
@@ -33,7 +33,6 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
     const [isAiThinking, setIsAiThinking] = useState(false);
 
     // --- 1. AUTO-SCROLL LOGIC ---
-    // This ensures the chat view always jumps to the latest message
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollIntoView({ behavior: "smooth" });
@@ -57,7 +56,32 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
         setMsg("");
     };
 
-    // --- 3. MAGIC WAND LOGIC (AI GENERATION) ---
+    // --- 3. CANVAS MANAGEMENT (CLEAR BOARD) ---
+    const handleClearCanvas = async () => {
+        const confirmed = window.confirm("Are you sure? This will wipe the board for EVERYONE in the room.");
+        if (!confirmed) return;
+
+        try {
+            const { root } = await room.getStorage();
+            const liveElements = root.get("elements") as any;
+            
+            room.batch(() => {
+                // Fix: Cast the keys array to string[] to satisfy TypeScript
+                const keys = Array.from(liveElements.keys()) as string[];
+                keys.forEach((key) => {
+                    liveElements.delete(key);
+                });
+            });
+            
+            const clearMsg = "🧹 The board has been cleared.";
+            broadcast({ type: "CHAT_MESSAGE", text: clearMsg, sender: "System" });
+            setChatHistory((prev) => [...prev, { sender: "System", text: clearMsg }]);
+        } catch (error) {
+            console.error("Failed to clear board:", error);
+        }
+    };
+
+    // --- 4. MAGIC WAND LOGIC (AI GENERATION) ---
     const handleMagicWand = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!aiPrompt.trim() || !onGenerate) return;
@@ -84,7 +108,6 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                 }
             }
             
-            // Dynamic import for Excalidraw to fix SSR "window is not defined"
             const excalidrawModule = await import("@excalidraw/excalidraw");
             const fullElements = excalidrawModule.convertToExcalidrawElements(skeletons);
             
@@ -97,7 +120,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
         }
     };
 
-    // --- 4. AI ARCHITECT LOGIC (BOARD ANALYSIS) ---
+    // --- 5. AI ARCHITECT LOGIC (BOARD ANALYSIS) ---
     const askAIArchitect = async () => {
         if (!msg.trim()) return;
         setIsAiThinking(true);
@@ -109,7 +132,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
 
         try {
             const { root } = await room.getStorage();
-            const liveElements = root.get("elements");
+            const liveElements = root.get("elements") as any;
             
             const simplifiedContext = Array.from(liveElements.values()).map((el: any) => ({
                 type: el.type,
@@ -154,11 +177,20 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                     isOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
-                {/* Header */}
+                {/* Header Section */}
                 <div className="p-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400">
-                        <Users className="w-4 h-4" />
-                        <span>ACTIVE NOW ({others.length + 1})</span>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400">
+                            <Users className="w-4 h-4" />
+                            <span>({others.length + 1})</span>
+                        </div>
+                        <button 
+                            onClick={handleClearCanvas}
+                            className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+                            title="Clear Board"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
                     </div>
                     <button 
                         onClick={() => setIsOpen(false)}
@@ -182,7 +214,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                     ))}
                 </div>
 
-                {/* AI Magic Wand */}
+                {/* AI Magic Wand Section */}
                 <div className="p-4 border-b border-slate-200 dark:border-white/10 bg-gradient-to-br from-blue-50/50 to-cyan-50/50 dark:from-blue-900/10 dark:to-cyan-900/10 flex-shrink-0">
                     <div className="flex items-center gap-2 mb-3 text-xs font-bold tracking-wider text-blue-600 dark:text-cyan-400">
                         <Sparkles className="w-4 h-4" />
@@ -206,7 +238,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                     </form>
                 </div>
 
-                {/* Chat & Architect Area */}
+                {/* Chat Area */}
                 <div className="flex-1 flex flex-col min-h-0 bg-white/30 dark:bg-black/20">
                     <div className="px-4 py-3 flex items-center gap-2 text-xs font-bold tracking-wider text-slate-500 flex-shrink-0">
                         <MessageSquare className="w-4 h-4" />
@@ -223,6 +255,8 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                                         ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-tr-sm" 
                                         : chat.sender === "✨ Pulse AI"
                                         ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-tl-sm shadow-md shadow-purple-500/20"
+                                        : chat.sender === "System" || chat.sender === "⚠️ System"
+                                        ? "bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] italic px-3 py-1 rounded-md"
                                         : "bg-white dark:bg-white/10 text-slate-800 dark:text-white border border-slate-100 dark:border-transparent rounded-tl-sm"
                                     }`}>
                                         {chat.text}
@@ -234,7 +268,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                                     <span className="text-[10px] text-slate-400 mb-1 font-medium">✨ Pulse AI</span>
                                     <div className="px-4 py-2.5 rounded-2xl text-sm bg-indigo-500/20 text-indigo-500 border border-indigo-500/30 flex items-center gap-2">
                                         <Loader2 className="w-3 h-3 animate-spin" />
-                                        <span>Architect is thinking...</span>
+                                        <span>Architect is analyzing...</span>
                                     </div>
                                 </div>
                             )}
@@ -243,7 +277,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                     </ScrollArea>
                 </div>
 
-                {/* Input Controls */}
+                {/* Input Area */}
                 <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-white/50 dark:bg-transparent flex-shrink-0">
                     <div className="flex items-center gap-2">
                         <form onSubmit={sendMessage} className="relative flex-1 flex items-center">
@@ -258,6 +292,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                                 type="submit" 
                                 disabled={!msg.trim() || isAiThinking}
                                 className="absolute right-1.5 p-2 rounded-full text-blue-500 disabled:opacity-50"
+                                title="Send message"
                             >
                                 <Send className="w-4 h-4" />
                             </button>
@@ -268,7 +303,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                             onClick={askAIArchitect}
                             disabled={!msg.trim() || isAiThinking}
                             className="p-3 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md hover:scale-105 disabled:opacity-50 transition-all flex-shrink-0"
-                            title="Analyze Board"
+                            title="Ask AI Architect"
                         >
                             <Bot className="w-4 h-4" />
                         </button>
