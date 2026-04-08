@@ -218,3 +218,69 @@ html {
     color 0.3s ease;
 }
 
+/* --- INITIAL HOME LOADER (Waves) --- */
+.loader-home {
+  width: 80px;
+  height: 40px;
+  background:
+    radial-gradient(circle 11px at top,#0000 94%,#b0e5f3) 0 20px,
+    radial-gradient(circle 11px at top,#0000 94%,#5dc1e4) 0 10px,
+    radial-gradient(circle 11px at top,#0000 94%,#008cd9) 0 0;
+  background-size: 20px 100%;
+  background-repeat: repeat-x;
+  animation: l7 1s infinite linear;
+}
+
+@keyframes l7 {
+  50%  {background-position: 10px 15px,-10px 12px,15px 8px}
+  100% {background-position: 20px 20px,-20px 10px,20px 0px}
+}
+
+/* --- INITIAL HOME LOADER (.loader-home) --- */
+.loader-home {
+  width: 80px;
+  height: 40px;
+  /* Using gradients for the "wave" effect */
+  background:
+    radial-gradient(circle 11px at top,#0000 94%,#b0e5f3) 0 20px,
+    radial-gradient(circle 11px at top,#0000 94%,#5dc1e4) 0 10px,
+    radial-gradient(circle 11px at top,#0000 94%,#008cd9) 0 0;
+  background-size: 20px 100%;
+  background-repeat: repeat-x;
+  animation: l7 1s infinite linear;
+}
+
+@keyframes l7 {
+  50%  {background-position: 10px 15px, -10px 12px, 15px 8px}
+  100% {background-position: 20px 20px, -20px 10px, 20px 0px}
+}
+
+/* --- THEME SWITCH LOADER (.loader-theme) --- */
+.loader-theme {
+  width: 80px;
+  height: 40px;
+  border-radius: 100px 100px 0 0;
+  position: relative;
+  overflow: hidden;
+  /* Adding a light border so it's visible on dark backgrounds */
+  border: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.loader-theme:before {
+  content: "";
+  position: absolute;
+  inset: 0 0 -100%;
+  background: 
+    radial-gradient(farthest-side,#ffd738 80%,#0000) left 70% top 20%/15px 15px,
+    radial-gradient(farthest-side,#020308 92%,#0000) left 65% bottom 19%/12px 12px,
+    radial-gradient(farthest-side,#ecfefe 92%,#0000) left 70% bottom 20%/15px 15px,
+    linear-gradient(#9eddfe 50%,#020308 0);
+  background-repeat: no-repeat;
+  animation: l5 2s infinite;
+}
+
+@keyframes l5 {
+  0%, 20%   {transform: rotate(0)}
+  40%, 60%  {transform: rotate(.5turn)}
+  80%, 100% {transform: rotate(1turn)}
+}

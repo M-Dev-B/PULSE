@@ -20,13 +20,13 @@ export default function BoardPage({ params }: Props) {
             initialStorage={{ elements: new LiveMap() }}
         >
             <ClientSideSuspense fallback={<div className="flex h-screen w-screen items-center justify-center">Connecting to Pulse...</div>}>
-                <div className="flex h-screen w-screen overflow-hidden">
-                    {/* The Canvas takes up the remaining space */}
-                    <main className="flex-1 relative">
+                <div className="relative h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#0B0C10]">
+                    
+                    {/* UPDATED: Added w-full h-full flex to enforce strict dimensions */}
+                    <main className="absolute inset-0 z-0 w-full h-full flex">
                         <PulseCanvas />
                     </main>
                     
-                    {/* The Sidebar (Fixed width) */}
                     <LiveSidebar />
                 </div>
             </ClientSideSuspense>

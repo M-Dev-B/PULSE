@@ -160,8 +160,11 @@ export default function PulseCanvas() {
         );
     }
 
-    return (
-        <div className="h-screen w-screen" onPointerLeave={handlePointerLeave}>
+return (
+        <div 
+            className="absolute inset-4 md:inset-6 rounded-3xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-2xl ring-1 ring-black/5 dark:ring-white/5" 
+            onPointerLeave={handlePointerLeave}
+        >
             <ExcalidrawWrapper
                 excalidrawAPI={(api) => setExcalidrawAPI(api)}
                 theme={excalidrawTheme}
