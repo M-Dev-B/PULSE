@@ -33,6 +33,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
     const [isAiThinking, setIsAiThinking] = useState(false);
 
     // --- 1. AUTO-SCROLL LOGIC ---
+    // This ensures the chat view always jumps to the latest message
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollIntoView({ behavior: "smooth" });
@@ -83,6 +84,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                 }
             }
             
+            // Dynamic import for Excalidraw to fix SSR "window is not defined"
             const excalidrawModule = await import("@excalidraw/excalidraw");
             const fullElements = excalidrawModule.convertToExcalidrawElements(skeletons);
             
@@ -140,33 +142,33 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
             <button 
                 onClick={() => setIsOpen(true)}
                 className={`fixed top-4 right-4 z-40 p-3.5 rounded-full bg-white/80 dark:bg-black/60 backdrop-blur-md border border-slate-200 dark:border-white/10 shadow-lg transition-all duration-300 hover:scale-105 ${
-                    isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                    isOpen ? 'opacity-0 pointer-events-none translate-x-10' : 'opacity-100 translate-x-0'
                 }`}
             >
-                <MessageSquare className="w-5 h-5" />
+                <MessageSquare className="w-5 h-5 text-slate-800 dark:text-white" />
             </button>
 
-            {/* Sidebar with Scroll Fix & Flex Layout */}
+            {/* Sidebar Shell */}
             <aside 
                 className={`fixed top-0 right-0 z-50 h-screen w-80 bg-white/70 dark:bg-[#0B0C10]/80 backdrop-blur-2xl border-l border-slate-200 dark:border-white/10 shadow-2xl flex flex-col overflow-hidden transition-transform duration-300 ease-in-out ${
                     isOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
-                {/* Header Section */}
+                {/* Header */}
                 <div className="p-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-slate-500">
+                    <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-slate-500 dark:text-slate-400">
                         <Users className="w-4 h-4" />
                         <span>ACTIVE NOW ({others.length + 1})</span>
                     </div>
                     <button 
                         onClick={() => setIsOpen(false)}
-                        className="p-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                        className="p-1.5 rounded-md text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                     >
                         <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Presence Avatars */}
+                {/* Avatars */}
                 <div className="p-4 border-b border-slate-200 dark:border-white/10 flex -space-x-2 flex-shrink-0">
                     <Avatar className="border-2 border-white dark:border-[#0B0C10] w-10 h-10 ring-2 ring-blue-500 z-10">
                         <AvatarImage src={self?.info?.avatar} />
@@ -180,7 +182,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                     ))}
                 </div>
 
-                {/* AI Magic Wand Section */}
+                {/* AI Magic Wand */}
                 <div className="p-4 border-b border-slate-200 dark:border-white/10 bg-gradient-to-br from-blue-50/50 to-cyan-50/50 dark:from-blue-900/10 dark:to-cyan-900/10 flex-shrink-0">
                     <div className="flex items-center gap-2 mb-3 text-xs font-bold tracking-wider text-blue-600 dark:text-cyan-400">
                         <Sparkles className="w-4 h-4" />
@@ -204,19 +206,18 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                     </form>
                 </div>
 
-                {/* Live Chat & Architect Area */}
+                {/* Chat & Architect Area */}
                 <div className="flex-1 flex flex-col min-h-0 bg-white/30 dark:bg-black/20">
                     <div className="px-4 py-3 flex items-center gap-2 text-xs font-bold tracking-wider text-slate-500 flex-shrink-0">
                         <MessageSquare className="w-4 h-4" />
                         <span>LIVE CHAT</span>
                     </div>
                     
-                    {/* scrollRef is attached to the bottom inside this area */}
                     <ScrollArea className="flex-1 px-4 w-full h-full">
                         <div className="space-y-4 pb-4">
                             {chatHistory.map((chat, i) => (
                                 <div key={i} className={`flex flex-col ${chat.sender === "Me" ? "items-end" : "items-start"}`}>
-                                    <span className="text-[10px] text-slate-400 mb-1 font-medium">{chat.sender}</span>
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 mb-1 font-medium">{chat.sender}</span>
                                     <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] shadow-sm ${
                                         chat.sender === "Me" 
                                         ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-tr-sm" 
@@ -233,22 +234,21 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                                     <span className="text-[10px] text-slate-400 mb-1 font-medium">✨ Pulse AI</span>
                                     <div className="px-4 py-2.5 rounded-2xl text-sm bg-indigo-500/20 text-indigo-500 border border-indigo-500/30 flex items-center gap-2">
                                         <Loader2 className="w-3 h-3 animate-spin" />
-                                        <span>Architect is analyzing...</span>
+                                        <span>Architect is thinking...</span>
                                     </div>
                                 </div>
                             )}
-                            {/* Anchor for Auto-Scroll */}
                             <div ref={scrollRef} />
                         </div>
                     </ScrollArea>
                 </div>
 
-                {/* Message & AI Architect Input Section */}
+                {/* Input Controls */}
                 <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-white/50 dark:bg-transparent flex-shrink-0">
                     <div className="flex items-center gap-2">
                         <form onSubmit={sendMessage} className="relative flex-1 flex items-center">
                             <Input 
-                                placeholder="Chat, or ask AI..." 
+                                placeholder="Chat, or ask AI Architect..." 
                                 value={msg}
                                 onChange={(e) => setMsg(e.target.value)}
                                 disabled={isAiThinking}
@@ -258,7 +258,6 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                                 type="submit" 
                                 disabled={!msg.trim() || isAiThinking}
                                 className="absolute right-1.5 p-2 rounded-full text-blue-500 disabled:opacity-50"
-                                title="Send message"
                             >
                                 <Send className="w-4 h-4" />
                             </button>
@@ -269,7 +268,7 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                             onClick={askAIArchitect}
                             disabled={!msg.trim() || isAiThinking}
                             className="p-3 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md hover:scale-105 disabled:opacity-50 transition-all flex-shrink-0"
-                            title="Ask AI Architect"
+                            title="Analyze Board"
                         >
                             <Bot className="w-4 h-4" />
                         </button>
