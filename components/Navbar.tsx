@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { BgAnimateButton } from "./ui/bg-animate-button";
-import { ThemeToggle } from "./ThemeToggle";
+import { ThemeToggle } from "./themeToggle";
 
 const Navbar = () => {
     const { isSignedIn, isLoaded } = useUser();
