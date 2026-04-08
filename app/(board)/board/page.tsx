@@ -1,9 +1,10 @@
-import React from 'react'
+import { redirect } from "next/navigation";
 
-const page = () => {
-    return (
-        <div>page</div>
-    )
+/**
+ * Pulse Root Board Redirect
+ * This server component catches anyone visiting /board 
+ * and instantly pushes them to the /board/test room.
+ */
+export default function BoardRootPage() {
+    redirect("/board/test");
 }
-
-export default page

@@ -6,170 +6,106 @@ import { useTheme } from "next-themes";
 import { useRoom, useUpdateMyPresence } from "@liveblocks/react";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
+// Excalidraw loading state
 const ExcalidrawWrapper = dynamic(
     () => import("./excalidraw-wrapper"),
-    { ssr: false, loading: () => <div className="flex h-screen items-center justify-center">Loading room storage...</div> }
+    { 
+        ssr: false, 
+        loading: () => (
+            <div className="h-full w-full flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+        ) 
+    }
 );
 
 export default function PulseCanvas() {
     const { theme } = useTheme();
     const excalidrawTheme = theme === "dark" ? "dark" : "light";
-
+    
     const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
-    const [isStorageReady, setIsStorageReady] = useState(false);
-
     const room = useRoom();
     const updateMyPresence = useUpdateMyPresence();
     const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // 1. Initialize Storage FIRST
+    // 1. Sync Remote Drawing & Cursors
     useEffect(() => {
         let isMounted = true;
-        async function prepareStorage() {
-            try {
-                await room.getStorage();
-                if (isMounted) setIsStorageReady(true);
-            } catch (error) {
-                console.error("Failed to load storage", error);
-            }
-        }
-        prepareStorage();
-        return () => { isMounted = false; };
-    }, [room]);
+        let unsubscribeElements: (() => void) | undefined;
+        let unsubscribeOthers: (() => void) | undefined;
 
-    // 2. Sync Remote Drawing (With Spatial Index Sorting)
-    useEffect(() => {
-        let isMounted = true;
-        let unsubscribe: (() => void) | undefined;
+        async function startSync() {
+            const { root } = await room.getStorage();
+            const liveElements = root.get("elements");
+            if (!isMounted || !excalidrawAPI) return;
 
-        async function syncCanvas() {
-            if (!isStorageReady || !excalidrawAPI) return;
+            // Initial Load
+            const initialElements = Array.from(liveElements.values()).sort((a: any, b: any) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
+            excalidrawAPI.updateScene({ elements: initialElements });
 
-            try {
-                const { root } = await room.getStorage();
-                const liveElements = root.get("elements");
-
+            // Listen for Remote Changes
+            unsubscribeElements = room.subscribe(liveElements, () => {
                 if (!isMounted) return;
+                const newElements = Array.from(liveElements.values()).sort((a: any, b: any) => (a.zIndex ?? 0) - (b.zIndex ?? 0));
+                excalidrawAPI.updateScene({ elements: newElements });
+            });
 
-                // HELPER: Sorts elements perfectly to prevent off-screen corruption
-                const getSortedElements = () => {
-                    return Array.from(liveElements.values()).sort((a: any, b: any) => {
-                        const zA = a.zIndex ?? 0;
-                        const zB = b.zIndex ?? 0;
-                        // Secondary sort by ID guarantees identical ordering across all clients
-                        if (zA === zB) return a.id.localeCompare(b.id);
-                        return zA - zB;
-                    });
-                };
-
-                // Initial load
-                excalidrawAPI.updateScene({ elements: getSortedElements() });
-
-                // Subscribe to future remote changes
-                unsubscribe = room.subscribe(liveElements, () => {
-                    if (!isMounted) return;
-                    excalidrawAPI.updateScene({ elements: getSortedElements() });
+            // Listen for Remote Cursors
+            unsubscribeOthers = room.subscribe("others", () => {
+                if (!isMounted) return;
+                const others = room.getOthers();
+                const collaborators = new Map();
+                others.forEach((other) => {
+                    if (other.presence?.cursor) {
+                        collaborators.set(other.connectionId.toString(), {
+                            pointer: other.presence.cursor,
+                            username: other.info?.name || "Anonymous",
+                            avatarUrl: other.info?.avatar,
+                            color: other.info?.color,
+                        });
+                    }
                 });
-            } catch (error) {
-                console.error("Failed to sync canvas", error);
-            }
+                excalidrawAPI.updateScene({ collaborators });
+            });
         }
-        syncCanvas();
+
+        startSync();
 
         return () => {
             isMounted = false;
-            if (unsubscribe) unsubscribe();
+            if (unsubscribeElements) unsubscribeElements();
+            if (unsubscribeOthers) unsubscribeOthers();
         };
-    }, [isStorageReady, excalidrawAPI, room]);
+    }, [excalidrawAPI, room]);
 
-    // 3. Sync Remote Cursors (Zero-Lag Native)
-    useEffect(() => {
-        if (!excalidrawAPI || !isStorageReady) return;
-
-        const syncCollaborators = () => {
-            const others = room.getOthers();
-            const collaborators = new Map();
-
-            for (const other of others) {
-                // 'other.info' now contains the data from Clerk!
-                if (other.presence?.cursor) {
-                    collaborators.set(other.connectionId.toString(), {
-                        pointer: other.presence.cursor,
-                        button: "up",
-                        selectedElementIds: {},
-                        username: other.info?.name || "Anonymous", // ✅ Real Name
-                        avatarUrl: other.info?.avatar,             // ✅ Real Avatar
-                        color: other.info?.color || "#9b59b6",     // ✅ Custom Color
-                    });
-                }
-            }
-
-            excalidrawAPI.updateScene({ collaborators });
-        };
-
-        syncCollaborators();
-        const unsubscribe = room.subscribe("others", syncCollaborators);
-
-        return () => unsubscribe();
-    }, [room, excalidrawAPI, isStorageReady]);
-
-    // 4. Sync Local Drawing (Delta Sync with Z-Index Tracking)
-    const handleChange = async (elements: readonly any[]) => {
-        if (!isStorageReady) return;
-
+    // 2. Sync Local Drawing
+    const handleChange = (elements: readonly any[]) => {
         if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
         syncTimeoutRef.current = setTimeout(async () => {
-            try {
-                const { root } = await room.getStorage();
-                const liveElements = root.get("elements");
+            const { root } = await room.getStorage();
+            const liveElements = root.get("elements");
 
-                room.batch(() => {
-                    // Loop with `index` to track Excalidraw's strict ordering requirements
-                    elements.forEach((el, index) => {
-                        const existing = liveElements.get(el.id);
-
-                        // Push to database if: 
-                        // 1. It's new
-                        // 2. It was modified (version increased)
-                        // 3. Its Z-Index changed (e.g. user clicked "Bring to Front")
-                        if (!existing || el.version > existing.version || existing.zIndex !== index) {
-                            liveElements.set(el.id, { ...el, zIndex: index });
-                        }
-                    });
+            room.batch(() => {
+                elements.forEach((el, index) => {
+                    const existing = liveElements.get(el.id);
+                    if (!existing || el.version > existing.version || existing.zIndex !== index) {
+                        liveElements.set(el.id, { ...el, zIndex: index });
+                    }
                 });
-            } catch (error) {
-                console.error("Failed to sync", error);
-            }
-        }, 50);
+            });
+        }, 50); 
     };
 
-    // 5. Sync Local Cursor
-    const handlePointerUpdate = (payload: { pointer: { x: number; y: number } }) => {
-        updateMyPresence({ cursor: payload.pointer });
-    };
-
-    const handlePointerLeave = () => {
-        updateMyPresence({ cursor: null });
-    };
-
-    if (!isStorageReady) {
-        return (
-            <div className="h-screen w-screen flex items-center justify-center">
-                Loading room storage...
-            </div>
-        );
-    }
-
-return (
+    return (
         <div 
-            className="absolute inset-4 md:inset-6 rounded-3xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-2xl ring-1 ring-black/5 dark:ring-white/5" 
-            onPointerLeave={handlePointerLeave}
+            className="h-full w-full relative" 
+            onPointerMove={(e) => updateMyPresence({ cursor: { x: e.clientX, y: e.clientY } })}
+            onPointerLeave={() => updateMyPresence({ cursor: null })}
         >
             <ExcalidrawWrapper
                 excalidrawAPI={(api) => setExcalidrawAPI(api)}
                 theme={excalidrawTheme}
                 onChange={handleChange}
-                onPointerUpdate={handlePointerUpdate}
             />
         </div>
     );
