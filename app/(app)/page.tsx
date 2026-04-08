@@ -14,33 +14,23 @@ const HomePage = () => {
   const [isFading, setIsFading] = useState(false)
   const [isFirstEntry, setIsFirstEntry] = useState(true)
 
-  // Track the previous theme to handle state updates during rendering
   const [prevTheme, setPrevTheme] = useState(resolvedTheme)
 
-  // 1. Handle Theme Changes (Render-Phase State Update)
-  // Instead of an effect, update state directly during render when the theme changes.
-  // This avoids the cascading render warning entirely.
   if (mounted && !isFirstEntry && resolvedTheme !== prevTheme) {
     setPrevTheme(resolvedTheme)
     setShowLoader(true)
     setIsFading(false)
   }
 
-  // 2. Handle Mounting (Hydration)
   useEffect(() => {
-    // Wrapping in a zero-delay timeout makes the update asynchronous.
-    // This satisfies the linter rule without causing a visual flicker, 
-    // since the SSR fallback matches the loader background visually.
+
     const mountTimer = setTimeout(() => setMounted(true), 0)
     return () => clearTimeout(mountTimer)
   }, [])
 
-  // 3. Centralized Timers for the Loader
-  // This single effect now handles both the initial load AND theme changes.
   useEffect(() => {
     if (!showLoader) return
 
-    // Because these are inside async timeouts, they are safe from the linter rule.
     const fadeTimer = setTimeout(() => setIsFading(true), 1000)
     const removeTimer = setTimeout(() => {
       setShowLoader(false)

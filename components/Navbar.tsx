@@ -10,7 +10,7 @@ const Navbar = () => {
     const { isSignedIn, isLoaded } = useUser();
     const pathname = usePathname();
 
-    if (!isLoaded) return <div className="h-16" />; // Simple spacer for loading
+    if (!isLoaded) return <div className="h-16" />; 
 
     const navLinks = [
         { href: "/dashboard", label: "Dashboard" },
@@ -29,12 +29,12 @@ const Navbar = () => {
                     alt="Pulse Logo"
                     width={80}
                     height={40}
-                    priority // Ensures logo loads immediately without flicker
-                    className="dark:invert-0 invert transition-all" // If logo is white, invert it for light mode
+                    priority 
+                    className="dark:invert-0 invert transition-all" 
                 />
             </Link>
 
-            {/* Navigation Links - automatically uses Source Sans 3 from layout body */}
+            {/* Navigation Links */}
             <div className="hidden md:flex gap-10 text-base font-medium tracking-wide">
                 {navLinks.map((link) => (
                     <Link

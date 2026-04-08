@@ -16,10 +16,8 @@ export async function POST(req: Request) {
     try {
         const { prompt, boardContext } = await req.json();
         
-        // We use 2.5-flash for its massive context window, perfect for reading large JSONs
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        // We combine the system instructions, the board data, and the user's question
         const fullPrompt = `
         ${SYSTEM_PROMPT}
         

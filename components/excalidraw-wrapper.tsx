@@ -6,7 +6,7 @@ import "@excalidraw/excalidraw/index.css";
 
 interface ExcalidrawWrapperProps {
     theme?: "light" | "dark";        
-    onChange?: (elements: readonly any[]) => void; // ✅ Reverted to any[] for Turbopack compatibility
+    onChange?: (elements: readonly any[]) => void; 
     onPointerUpdate?: (payload: { pointer: { x: number; y: number } }) => void;
     initialData?: any;
     excalidrawAPI?: (api: ExcalidrawImperativeAPI) => void;

@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { Plus, Users, LayoutDashboard, Trash2 } from "lucide-react"; 
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes"; // Import theme hook
+import { useTheme } from "next-themes"; 
 import Navbar from '@/components/Navbar';
-import Grainient from '@/components/Grainient'; // Ensure this path is correct
+import Grainient from '@/components/Grainient'; 
 
 type Board = {
     id: string;
@@ -23,7 +23,7 @@ export default function Dashboard() {
 
     const [boards, setBoards] = useState<Board[]>([]);
     const [isLoadingBoards, setIsLoadingBoards] = useState(true);
-    const [mounted, setMounted] = useState(false); // Hydration safety for theme
+    const [mounted, setMounted] = useState(false); 
 
     useEffect(() => {
         setMounted(true);
@@ -89,7 +89,7 @@ export default function Dashboard() {
          {/* --- WEBGL BACKGROUND LAYER --- */}
             <div className="fixed inset-0 -z-10 w-full h-full">
                 {resolvedTheme === 'dark' ? (
-                    // YOUR REACT BITS CONFIGURATION (Dark Mode)
+                    // (Dark Mode)
                     <Grainient 
                         color1="#8275e6"
                         color2="#000000"
@@ -115,7 +115,7 @@ export default function Dashboard() {
                         zoom={0.75}
                     />
                 ) : (
-                    // LIGHT MODE CONFIGURATION
+                    // LIGHT MODE 
                     <Grainient 
                         color1="#8275e6"
                         color2="#f8fafc"
@@ -171,7 +171,7 @@ export default function Dashboard() {
                     </button>
                 </div>
 
-                {/* Grid Content... (No changes needed below here) */}
+                {/* Grid Content... */}
                 {isLoadingBoards ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3].map((i) => (

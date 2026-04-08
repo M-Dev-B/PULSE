@@ -13,10 +13,8 @@ type Props = {
 export default function BoardPage({ params }: Props) {
     const { roomId } = use(params);
 
-    // ✨ NEW: State to hold the AI-generated elements before injection
     const [newAiElements, setNewAiElements] = useState<any[] | null>(null);
 
-    // Memoize initial storage to prevent unnecessary re-renders
     const initialStorage = useMemo(() => ({
         elements: new LiveMap()
     }), []);

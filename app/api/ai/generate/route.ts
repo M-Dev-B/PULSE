@@ -28,7 +28,6 @@ export async function POST(req: Request) {
         const result = await model.generateContent([SYSTEM_PROMPT, prompt]);
         const responseText = result.response.text();
         
-        // 🚨 DEBUG: Print exactly what Gemini returned to your VS Code terminal
         console.log("=== RAW GEMINI OUTPUT ===");
         console.log(responseText);
         console.log("=========================");
@@ -42,15 +41,12 @@ export async function POST(req: Request) {
 
         const cleanJson = responseText.substring(startIndex, endIndex + 1);
         
-        // Test parsing before sending to frontend
         const parsedData = JSON.parse(cleanJson);
         return NextResponse.json(parsedData);
 
     } catch (error: any) {
-        // 🚨 DEBUG: Print the actual system crash reason
         console.error("Backend Crash:", error.message || error);
         
-        // Send the real error to the frontend
         return NextResponse.json(
             { error: error.message || "Unknown backend failure" }, 
             { status: 500 }

@@ -20,9 +20,9 @@ export async function POST(request: Request) {
         info: {
             name: `${user.firstName} ${user.lastName}`.trim() || "Anonymous",
             avatar: user.imageUrl,
-            color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Random hex color
+            color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, 
         },
-    };
+    }
 
     // 3. Start a Liveblocks session
     const { room } = await request.json();

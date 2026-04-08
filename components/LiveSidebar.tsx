@@ -83,7 +83,6 @@ export default function LiveSidebar({ onGenerate }: { onGenerate?: (elements: an
                 }
             }
             
-            // Dynamic import for Excalidraw to fix SSR "window is not defined"
             const excalidrawModule = await import("@excalidraw/excalidraw");
             const fullElements = excalidrawModule.convertToExcalidrawElements(skeletons);
             
